@@ -1,0 +1,179 @@
+body {
+    background-color: #dadbe7;
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+.dashboard-container {
+    width: 98%;
+    margin: 1%;
+    display: flex;
+    justify-content: space-between;
+    background: #ffffff;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.subjects-container,
+.planner-container {
+    width: 48%;
+    box-sizing: border-box;
+    box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.planner-container {
+    overflow-y: auto;
+    max-height: 85vh;
+    padding: 1em;
+    margin-bottom: 1em;
+}
+
+.subjects-container {
+    overflow-y: auto;
+    max-height: 85vh;
+    padding: 1em;
+    margin-bottom: 1em;
+}
+
+.planner-container h2,
+.planner-container .session h3 {
+    font-size: 1em; /* Adjust font size for headings in planner container */
+    margin: 5px 0; /* Adjust margin for headings in planner container */
+}
+
+.planner-container .placeholder {
+    min-height: 30px; /* Adjust placeholder size in planner container */
+    margin: 5px 0; /* Adjust margin for placeholder in planner container */
+    padding: 5px; /* Adjust padding for placeholder in planner container */
+}
+
+.subject {
+    background-color: #e0e0e0;
+    border-radius: 15px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    margin-bottom: 10px;
+    cursor: move;
+    transition: all 0.3s ease;
+}
+
+.subject:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+.core-subject {
+    background-color: #98FB98;
+}
+
+.major-core-subject {
+    background-color: #ADD8E6;
+}
+
+.elective-subject {
+    background-color: #FFD700;
+}
+
+.dropdown-menu {
+    z-index: 2000 !important; /* any high value should work */
+}
+
+.subject .dropdown {
+    position: static;
+}
+
+.subject .dropdown-menu {
+    position: absolute;
+    width: 100%;
+}
+
+.custom-small-btn {
+    font-size: 12.5px; /* Adjust as needed */
+    padding: 2px 6px; /* Adjust as needed */
+}
+
+/* Subject Blink Styling */
+
+@keyframes fading {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0;
+    }
+}
+
+.blink {
+    animation: fading 0.5s linear infinite;
+}
+
+#accumulated-credits {
+    position: fixed;  /* This will make the div stick to the viewport */
+    bottom: 90px;     /* Push it up 10px from the bottom */
+    left: 10px;       /* Push it 10px from the left */
+    padding: 10px 15px;
+    background-color: #333;  /* Dark background for contrast */
+    color: #fff;      /* White text color */
+    border-radius: 5px;   /* Rounded corners */
+    font-weight: bold;
+    z-index: 1000;    /* Ensure it's above other elements */
+}
+
+#accumulated-credits:hover {
+    background-color: #555;  /* Slightly lighter shade on hover */
+}
+
+/* Styling for Legend Container */
+.legend-container {
+    position: fixed; /* Set position to fixed */
+    top: 110px; /* Adjust the top position as needed */
+    left: 10px;
+    background-color: #fff; /* Background color for the container */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Adjust the z-index as needed */
+}
+
+
+/* Styling for Legend */
+.legend {
+    display: flex;
+    flex-direction: column; /* Display legend items in a column */
+}
+
+/* Styling for Legend Items */
+.legend-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px; /* Add spacing between legend items */
+}
+
+/* Styling for Legend Item Colors */
+.legend-color {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    border-radius: 50%;
+}
+
+/* Define colors for each subject type */
+.core .legend-color {
+    background-color: #98FB98;
+}
+
+.elective .legend-color {
+    background-color: #FFD700;
+}
+
+.major .legend-color {
+    background-color: #ADD8E6;
+}
+
+/* Styling for legend text */
+.legend-item span {
+    font-size: 14px;
+}
+
+
