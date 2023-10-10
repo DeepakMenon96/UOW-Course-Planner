@@ -55,6 +55,7 @@ function revertDrag(el) {
         }).then((result) => {
             if (result.isConfirmed) {
                 subjectsToBeRemoved.forEach(subject => subject.querySelector('.reset-btn').click());
+                //decrementCredits(el);
                 if (originalParent) {
                     originalParent.appendChild(el);
                     var resetBtn = el.querySelector('.reset-btn');
@@ -67,14 +68,20 @@ function revertDrag(el) {
         });
 
     } else {
-        decrementCredits(el);
+//        if (shouldDecrementImmediately) {
+//            decrementCredits(el);
+//        }
         if (originalParent) {
             originalParent.appendChild(el);
             var resetBtn = el.querySelector('.reset-btn');
             if (resetBtn) el.removeChild(resetBtn);
+            decrementCredits(el);
         } else {
             console.error('Original parent not found');
         }
+//        if (!shouldDecrementImmediately) {
+//            decrementCredits(el);
+//        }
     }
 }
 
@@ -105,7 +112,7 @@ function setupSubjectElement(subjectDiv, sessionIndex) {
             title: 'Oops...',
             text: `Prerequisites not met for ${subjectDiv.id}! Make sure you have prerequisites placed in a previous semester`,
         });
-        decrementCredits(subjectDiv);
+        //decrementCredits(subjectDiv);
     }
 }
 
@@ -165,22 +172,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    function updateDisplayedCredits() {
-        accumulatedCreditsElement.innerText = "Credits: " + accumulatedCredits;
-    }
-
-    function incrementCreditsBy(value) {
-        accumulatedCredits += value;
-        updateDisplayedCredits();
-    }
-
-    function decrementCredits(el) {
-        accumulatedCredits -= 6;
-        updateDisplayedCredits();
-    }
-
     var dragulaContainers = Array.from(document.querySelectorAll('.available-section, .placeholder'));
-
 
     dragula(dragulaContainers)
     .on('drag', function (el) {
@@ -381,7 +373,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 text: 'Prerequisites not met! make sure you have prerequisites placed in a previous semester',
             });
             revertDrag(el);
-            decrementCredits(el);
+            //decrementCredits(el);
             return;
         }
 
@@ -400,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 let currentSessionIndex = parseInt(el.closest('.session').id.replace('session', ''));
                 let totalSessions = document.querySelectorAll('.session').length;
                 let subjectsToBeRemoved = [];
-
+                //decrementCredits(el);
                 for (let i = currentSessionIndex + 1; i < totalSessions; i++) {
                     let sessionElement = document.getElementById('session' + i);
                     if (sessionElement) {
@@ -480,6 +472,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             console.error('Error:', error);
                         });
                 }
+                //decrementCredits(el);
             });
 
             el.appendChild(resetBtn);
