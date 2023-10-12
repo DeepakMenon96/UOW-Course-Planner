@@ -176,4 +176,27 @@ body {
     font-size: 14px;
 }
 
+/* Styles for the capstone selection table */
+.capstone-selection {
+    margin-top: 20px;
+}
 
+.capstone-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.capstone-table th,
+.capstone-table td {
+    border: 1px solid #ccc;
+    text-align: left;
+    padding: 8px;
+}
+
+.capstone-table th {
+    background-color: #f2f2f2;
+}
+
+.capstone-subject {
+    background-color: orange; /* You can choose any shade of orange */
+}
