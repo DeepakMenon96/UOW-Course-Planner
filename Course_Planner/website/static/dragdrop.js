@@ -68,9 +68,6 @@ function revertDrag(el) {
         });
 
     } else {
-//        if (shouldDecrementImmediately) {
-//            decrementCredits(el);
-//        }
         if (originalParent) {
             originalParent.appendChild(el);
             var resetBtn = el.querySelector('.reset-btn');
@@ -79,9 +76,6 @@ function revertDrag(el) {
         } else {
             console.error('Original parent not found');
         }
-//        if (!shouldDecrementImmediately) {
-//            decrementCredits(el);
-//        }
     }
 }
 
@@ -174,7 +168,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var dragulaContainers = Array.from(document.querySelectorAll('.available-section, .placeholder'));
 
-    dragula(dragulaContainers)
+    dragula(dragulaContainers, {
+        moves: function (el, container, handle) {
+            // Do not allow dragging if the element has the 'in-course-planner' class.
+            return !el.classList.contains('in-course-planner');
+        }
+    })
     .on('drag', function (el) {
         // Check if the original parent is already set
         if (!el.hasAttribute('data-original-parent')) {
@@ -472,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             console.error('Error:', error);
                         });
                 }
-                //decrementCredits(el);
+                decrementCredits(el);
             });
 
             el.appendChild(resetBtn);
@@ -497,13 +496,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-// Existing logic for "Recommend Core Subjects" button
 document.addEventListener('DOMContentLoaded', function() {
     const recommendButton = document.getElementById('recommend-btn');
-    const accumulatedCreditsElement = document.getElementById("accumulated-credits");
     if (recommendButton) {
         recommendButton.addEventListener('click', function() {
+            // Temporarily save the original accumulatedCredits
+            let originalAccumulatedCredits = accumulatedCredits;
             accumulatedCredits = 0;
+
             let dashboardContainer = document.querySelector('.dashboard-container');
             let startingSession = dashboardContainer.getAttribute('data-starting-session'); // Get the starting session
             let storedMajor = window.storedMajor || localStorage.getItem('selectedMajor');
@@ -511,23 +511,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let coreSubjectsOrder;
             if(storedMajor == "Information Systems Development") {
-                console.log("Stored Major: ", storedMajor);
                 if (startingSession.toLowerCase() === 'autumn') {
                     coreSubjectsOrder = [
-                        ['CSIT881', 'CSIT883'],  // First Autumn
-                        ['CSIT882', 'CSIT884', 'CSIT985', 'ISIT906'],  // First Spring
-                        ['CSIT988', 'ISIT950'],  // Second Autumn
-                        ['CSCI927']  // Second Spring
+                        ['CSIT881', 'CSIT883'],
+                        ['CSIT882', 'CSIT884', 'CSIT985', 'ISIT906'],
+                        ['CSIT988', 'ISIT950'],
+                        ['CSCI927']
                     ];
-                } else {  // Assuming the only other option is 'spring'
+                } else {
                     coreSubjectsOrder = [
-                        ['CSIT881', 'CSIT883', 'CSIT985'],  // First Spring
-                        ['CSIT882', 'CSIT884', 'CSIT988'],  // First Autumn
-                        ['ISIT906', 'CSCI927'],  // Second Autumn
-                        ['ISIT950']  // Second Spring
+                        ['CSIT881', 'CSIT883', 'CSIT985'],
+                        ['CSIT882', 'CSIT884', 'CSIT988'],
+                        ['ISIT906', 'CSCI927'],
+                        ['ISIT950']
                     ];
                 }
             }
+
             let sessionIndex = 0;
             document.querySelectorAll('.planner-container .session').forEach(sessionDiv => {
                 if (coreSubjectsOrder[sessionIndex]) {
@@ -537,18 +537,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         const subjectDiv = document.getElementById(subjectCode);
                         if (subjectDiv && placeholders[placeholderIndex]) {
                             setupSubjectElement(subjectDiv, sessionIndex);
+
+                            // Clear existing content in the placeholder before appending new subject
+                            while (placeholders[placeholderIndex].firstChild) {
+                                placeholders[placeholderIndex].removeChild(placeholders[placeholderIndex].firstChild);
+                            }
+
                             placeholders[placeholderIndex].appendChild(subjectDiv);
-                            // Run prerequisite check here
+
                             if (prerequisitesMet(subjectDiv, sessionIndex)) {
                                 console.log(`Prerequisites met for ${subjectDiv.id}`);
-                                // Store the current parent ID before moving the subject
                                 if (!subjectDiv.hasAttribute('data-original-parent')) {
                                     subjectDiv.setAttribute('data-original-parent', subjectDiv.parentElement.id);
-                                    console.log("Setting data-original-parent in recommendButton: ", subjectDiv.getAttribute('data-original-parent'));  // Debug line
                                 }
-                                // Move subject only if prerequisites are met
-                                placeholders[placeholderIndex].appendChild(subjectDiv);
-                                // Add the 'x' button to the moved element
                                 if (!subjectDiv.querySelector('.reset-btn')) {
                                     var resetBtn = document.createElement('span');
                                     resetBtn.innerHTML = " X";
@@ -563,22 +564,179 @@ document.addEventListener('DOMContentLoaded', function() {
                                     subjectDiv.appendChild(resetBtn);
                                 }
                                 placeholderIndex++;
-                                incrementCreditsBy(6);
                             } else {
                                 console.log(`Prerequisites NOT met for ${subjectDiv.id}`);
-                                // Show alert if prerequisites are not met
                                 Swal.fire({
                                     icon: 'warning',
                                     title: 'Oops...',
                                     text: `Prerequisites not met for ${subjectCode}! Make sure you have prerequisites placed in a previous semester`,
                                 });
-                                decrementCredits(el);
                             }
                         }
                     });
                 }
                 sessionIndex++;
             });
+
+            // At the end, manually set accumulatedCredits based on the subjects present
+            let finalCredits = 0;
+            document.querySelectorAll('.planner-container .session .subject').forEach(subjectDiv => {
+                finalCredits += 6;
+            });
+
+            // Update accumulatedCredits and the display
+            accumulatedCredits = finalCredits;
+            updateDisplayedCredits();
         });
     }
+});
+
+// Check if a subject with the given code is completed in previous sessions
+function isSubjectCompleted(subjectCode) {
+    console.log("Checking if subject is completed:", subjectCode);  // Debug line
+    const coursePlanner = document.querySelector('.planner-container');  // Get the course planner container
+    if (!coursePlanner) {
+        console.error("Course planner not found!");
+        return false;
+    }
+    const allSessions = coursePlanner.querySelectorAll('.session');  // Get all sessions within the course planner
+    for (const session of allSessions) {
+        const subjectsInSession = Array.from(session.querySelectorAll('.subject'));
+        console.log("Subjects in session:", subjectsInSession.map(s => s.id));  // Debug line
+        if (subjectsInSession.some(subject => {
+            console.log(`Comparing ${subject.id} with ${subjectCode}`);
+            return subject.id === subjectCode;
+        })) {
+            console.log("Subject is completed:", subjectCode);  // Debug line
+            return true;
+        }
+    }
+    console.log("Subject is NOT completed:", subjectCode);  // Debug line
+    return false;
+}
+
+
+// Function to populate selected capstone/research project into the last box of the last two sessions
+
+// Variable to store previously selected project code
+let prevSelectedProjectCode = null;
+
+document.addEventListener("DOMContentLoaded", function() {
+    const capstoneRadios = document.getElementsByName("capstone_project");
+    capstoneRadios.forEach(radio => {
+        radio.addEventListener("change", function() {
+            console.log("Selected project code:", this.value);  // Debug line
+            const selectedProjectCode = this.value; // Assumes this.value contains the subject code
+
+            // Special case for CSIT999 which requires CSIT940 as a prerequisite
+            if (selectedProjectCode === 'CSIT999' && !isSubjectCompleted('CSIT940')) {
+                console.log("Before Swal");
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Oops...',
+                    text: 'CSIT999 - Research project requires you to have completed CSIT940 - Research Methodology and scored at least 75%',
+                }).then(() => {
+                    // Uncheck the radio button here
+                    this.checked = false;
+                });
+                console.log("After Swal");
+                return;
+            }
+
+            // Add credits for the newly selected project
+            if (selectedProjectCode === 'CSIT999' || selectedProjectCode === 'CSIT998') {
+                accumulatedCredits += 12;  // Add 12 credits for CSIT999 or CSIT998
+            } else {
+                accumulatedCredits += 6;  // Add 6 credits for other projects
+            }
+
+            updateDisplayedCredits();
+
+            // Update prevSelectedProjectCode for future reference
+            prevSelectedProjectCode = selectedProjectCode;
+
+            // Find the parent row of the selected radio
+            let parentRow = this.closest('tr');
+
+            // Find the subject name from the row
+            const selectedProjectName = parentRow.querySelectorAll('td')[2].innerText;
+
+            // Remove existing capstone subjects first
+            document.querySelectorAll('.capstone-subject').forEach(subject => subject.remove());
+
+            // Create new subject div
+            const capstone = document.createElement("div");
+            capstone.className = `subject capstone-subject ${selectedProjectCode}`;
+            capstone.draggable = true;
+            capstone.id = selectedProjectCode;
+            capstone.innerHTML = `<span>${selectedProjectCode} - ${selectedProjectName}</span>`;
+
+            // Create reset button
+            var resetBtn = document.createElement('span');
+            resetBtn.innerHTML = " X";
+            resetBtn.className = 'reset-btn';
+            resetBtn.style.color = "red";
+            resetBtn.style.cursor = "pointer";
+            resetBtn.addEventListener('click', function () {
+                // Remove capstone subjects
+                document.querySelectorAll(`.capstone-subject.${selectedProjectCode}`).forEach(subject => subject.remove());
+
+                // Reset prevSelectedProjectCode
+                prevSelectedProjectCode = null;
+
+                // Uncheck the radio button
+                const radioToUncheck = document.querySelector(`input[name="capstone_project"][value="${selectedProjectCode}"]`);
+                if (radioToUncheck) {
+                    radioToUncheck.checked = false;
+                }
+            });
+            capstone.appendChild(resetBtn);
+
+            // Add the new capstone subjects to the last two sessions
+            const lastTwoSessions = Array.from(document.querySelectorAll(".session")).slice(-2);
+            lastTwoSessions.forEach(session => {
+                const placeholders = session.querySelectorAll('.placeholder');
+                const lastPlaceholder = placeholders[placeholders.length - 1];
+
+                // Check if there's an existing subject in the last placeholder
+                if (lastPlaceholder.querySelector('.subject')) {
+                    // Decrement the credits for the existing subject
+                    accumulatedCredits -= 6;  // Assuming each subject is worth 6 credits
+                    updateDisplayedCredits();
+                }
+
+                // Clear existing content in the last placeholder before appending new capstone subject
+                while (lastPlaceholder.firstChild) {
+                    lastPlaceholder.removeChild(lastPlaceholder.firstChild);
+                }
+
+                const clonedCapstone = capstone.cloneNode(true);
+
+                // Make the cloned capstone subject non-draggable
+                clonedCapstone.draggable = false;
+
+                // Add a new class to indicate it is in the course planner
+                clonedCapstone.classList.add("in-course-planner");
+
+                // Attach the same event listener to the cloned element
+                clonedCapstone.querySelector('.reset-btn').addEventListener('click', function () {
+                    // Remove capstone subjects
+                    document.querySelectorAll(`.capstone-subject.${selectedProjectCode}`).forEach(subject => subject.remove());
+                    if (selectedProjectCode === 'CSIT999' || selectedProjectCode === 'CSIT998') {
+                        accumulatedCredits -= 12;  // Subtract 12 credits for CSIT999 or CSIT998
+                    }
+                    // Reset prevSelectedProjectCode
+                    prevSelectedProjectCode = null;
+
+                    updateDisplayedCredits();
+                    // Uncheck the radio button
+                    const radioToUncheck = document.querySelector(`input[name="capstone_project"][value="${selectedProjectCode}"]`);
+                    if (radioToUncheck) {
+                        radioToUncheck.checked = false;
+                    }
+                });
+                lastPlaceholder.appendChild(clonedCapstone);
+            });
+        });
+    });
 });
