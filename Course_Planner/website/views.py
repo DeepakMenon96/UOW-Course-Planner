@@ -36,7 +36,6 @@ def dashboard():
 
     try:
         all_course_subjects = Subject.query.join(Subject.courses).filter(Course.id == course.id).all()
-
         subjects_by_session = {
             'both': [],
             'autumn': [],
@@ -77,6 +76,18 @@ def dashboard():
     majors = Major.query.all()
     current_year = datetime.now().year
     years = range(current_year - 1, current_year + 1)
+
+    # Include subjects CSIT998 and CSIT999 for selection in the dashboard
+    capstone_subjects = Subject.query.filter(Subject.code.in_(['CSIT998', 'CSIT999'])).all()
+    capstone_subjects_info = []
+    for subject in capstone_subjects:
+        subject_info = {
+            'code': subject.code,
+            'name': subject.name,
+            'type': 'capstone',
+        }
+        capstone_subjects_info.append(subject_info)
+    subjects_by_session['capstone'] = capstone_subjects_info
 
     return render_template(
         "dashboard.html",
