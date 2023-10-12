@@ -37,8 +37,28 @@
         </div>
     </div>
 
-
-
+    <!-- Table for selecting capstone/research project -->
+    <div class="capstone-selection">
+        <h3>Select Capstone/Research Project</h3>
+        <table class="capstone-table">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Code</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subject in subjects_by_session['capstone'] %}
+                <tr>
+                    <td><input type="radio" name="capstone_project" value="{{ subject['code'] }}"></td>
+                    <td>{{ subject['code'] }}</td>
+                    <td>{{ subject['name'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <div id="accumulated-credits">Credits: 0</div>
 
@@ -104,32 +124,35 @@
         <h2>Offered in Both Sessions</h2>
         <div class="session available-section both-section" id="both-sessions">
             {% for subject in subjects_by_session['both'] %}
-                <div class="subject {{ subject.type }}-subject {{ subject.code }}" draggable="true"
-                    id="{{ subject.code }}"
-                    data-sessions="Both"
-                    data-type="{{ subject.type }}"
-                    data-original-type="{{ subject.type }}"
-                    data-prerequisites='{{ subject.prerequisites_json }}'
-                    data-prerequisite-type="{{ subject.prerequisite_type }}"
-                    data-credits="{{ subject.credit }}">
+                {% if subject['code'] != 'CSIT998' and subject['code'] != 'CSIT999' %}
+                    <!-- existing code for displaying subject -->
+                    <div class="subject {{ subject.type }}-subject {{ subject.code }}" draggable="true"
+                        id="{{ subject.code }}"
+                        data-sessions="Both"
+                        data-type="{{ subject.type }}"
+                        data-original-type="{{ subject.type }}"
+                        data-prerequisites='{{ subject.prerequisites_json }}'
+                        data-prerequisite-type="{{ subject.prerequisite_type }}"
+                        data-credits="{{ subject.credit }}">
 
-                    <span>{{ subject.code }} - {{ subject.name }}</span>
-                    {% if subject.prerequisites %}
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle custom-small-btn" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Prerequisites
-                            </button>
-                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                {% if subject.prerequisites|length > 1 %}
-                                    <p class="dropdown-item">{{ "Complete all" if subject.prerequisite_type == "AND" else "Complete one" }}:</p>
-                                {% endif %}
-                                {% for pre in subject.prerequisites %}
-                                    <a class="dropdown-item" href="#">{{ pre.code }} - {{ pre.name }}</a>
-                                {% endfor %}
+                        <span>{{ subject.code }} - {{ subject.name }}</span>
+                        {% if subject.prerequisites %}
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle custom-small-btn" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    Prerequisites
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                    {% if subject.prerequisites|length > 1 %}
+                                        <p class="dropdown-item">{{ "Complete all" if subject.prerequisite_type == "AND" else "Complete one" }}:</p>
+                                    {% endif %}
+                                    {% for pre in subject.prerequisites %}
+                                        <a class="dropdown-item" href="#">{{ pre.code }} - {{ pre.name }}</a>
+                                    {% endfor %}
+                                </div>
                             </div>
-                        </div>
-                    {% endif %}
-                </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
             {% endfor %}
         </div>
 
