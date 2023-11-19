@@ -114,7 +114,7 @@ class PrerequisiteGroup(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     prerequisites = relationship("Subject", secondary="prerequisite_association")
     subject = relationship("Subject", uselist=False, back_populates="prerequisite_group")
-    prerequisite_type = db.Column(db.String(20))  # Add this line to store 'AND' or 'OR'
+    prerequisite_type = db.Column(db.String(20))
 
 
 prerequisite_association = db.Table(
@@ -122,4 +122,3 @@ prerequisite_association = db.Table(
     db.Column('prerequisite_group_id', db.Integer, db.ForeignKey('prerequisite_group.id')),
     db.Column('subject_id', db.Integer, db.ForeignKey('subject.id'))
 )
-
