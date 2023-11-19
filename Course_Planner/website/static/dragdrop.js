@@ -13,7 +13,7 @@ function incrementCreditsBy(value) {
 }
 
 function decrementCredits(el) {
-    accumulatedCredits -= 6;
+    accumulatedCredits = Math.max(0, accumulatedCredits - 6);
     updateDisplayedCredits();
 }
 
@@ -110,7 +110,7 @@ function setupSubjectElement(subjectDiv, sessionIndex) {
     }
 }
 
-// Add this function to perform the prerequisite checks
+//Function to perform the prerequisite checks
 function prerequisitesMet(el, targetSessionIndex) {
     console.log("Checking prerequisites for ", el.id, "in session", targetSessionIndex);
     let prerequisitesString = el.getAttribute('data-prerequisites') || '[]';
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (!isSourceAvailableSection && isTargetAvailableSection) {  // Checking if the source is the planner and the target is the available section.
-            decrementCredits(el);  // decrement by 6
+            decrementCredits(el);
         }
 
         console.log("Target Element: ", target); // Log the entire target element
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if(dependentSubject.sessionIndex <= targetSessionIndex) {
                         let resetBtn = dependentSubject.subject.querySelector('.reset-btn');
                         if(resetBtn) {
-                            resetBtn.click(); // this will handle the credit decrementing too
+                            resetBtn.click();
                         }
                     }
                 });
@@ -330,7 +330,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         console.log(`Is Autumn Session: ${isAutumnSession}`);
 
-        // Modified Prerequisite Checking Logic
         let prerequisitesMet = false;
         if (prerequisiteType === 'AND') {
             prerequisitesMet = prerequisitesArray.every(prerequisite => {
@@ -364,7 +363,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         console.log("Final - Prerequisites Met: ", prerequisitesMet);
 
-        // Rest of your logic remains the same
         if (!prerequisitesMet) {
             Swal.fire({
                 icon: 'warning',
@@ -445,12 +443,16 @@ document.addEventListener('DOMContentLoaded', function () {
                                 });
                             decrementCredits(el);
                         }
+                        else {
+                            incrementCreditsBy(6);
+                        }
                     });
                 } else {
                     if (originalParent) {
                         originalParent.appendChild(el);
                         el.removeChild(resetBtn);
-                    } else {
+                    }
+                    else {
                         console.error('Original parent not found');
                     }
 
@@ -497,86 +499,213 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
+
+    function FilterSubjects(subjects, criteria) {
+        let filteredSubjects = [];
+    
+        if (criteria === "core") {
+            filteredSubjects = subjects.filter(subject => subject.type === "core");
+        } else if (criteria === "major") {
+            filteredSubjects = subjects.filter(subject => subject.type === "major");
+        } else if (criteria === "core AND offeredInBoth") {
+            filteredSubjects = subjects.filter(subject => subject.type === "core" && subject.sessions === "Both");
+        }
+    
+        return filteredSubjects;
+    }
+
+    function GetPrerequisiteType(subject) {
+        return subject.prerequisiteType;
+    }
+
+    function PlanClosestAvailableSession(subject, allSessions, placeholdersLeft, afterPrerequisites = false) {
+        for (let session of allSessions) {
+            if (placeholdersLeft[session] > 0) {
+                if (afterPrerequisites) {
+                    // Placeholder...
+                } else {
+                    placeholdersLeft[session]--;
+                    return session;
+                }
+            }
+        }
+        return null;
+    }
+
+    function BatchRecommendSubjects(availableSubjects) {
+        let allSessions = ['Session1', 'Session2', 'Session3', 'Session4'];
+        let placeholdersLeft = { 'Session1': 4, 'Session2': 4, 'Session3': 3, 'Session4': 3 };
+        let plannedPlacements = {};
+
+        let subjectsToRecommend = FilterSubjects(availableSubjects, "core" || "major");
+
+        let coreSubjectsBothSessions = FilterSubjects(subjectsToRecommend, "core" && "offeredInBoth");
+        for (let i = 0; i < coreSubjectsBothSessions.length / 2; i++) {
+            plannedPlacements[coreSubjectsBothSessions[i]] = 'Session1';
+            placeholdersLeft['Session1']--;
+        }
+        for (let i = Math.floor(coreSubjectsBothSessions.length / 2); i < coreSubjectsBothSessions.length; i++) {
+            plannedPlacements[coreSubjectsBothSessions[i]] = 'Session2';
+            placeholdersLeft['Session2']--;
+        }
+
+        for (let subject of subjectsToRecommend) {
+            if (subject.prerequisites && subject.prerequisites.length > 0) {
+                let prereqType = GetPrerequisiteType(subject);
+                if (prereqType === "AND") {
+                    for (let prerequisite of subject.prerequisites) {
+                        if (!plannedPlacements[prerequisite]) {
+                            let plannedSession = PlanClosestAvailableSession(prerequisite, allSessions, placeholdersLeft);
+                            plannedPlacements[prerequisite] = plannedSession;
+                        }
+                    }
+                } else if (prereqType === "OR") {
+                    let prerequisiteMet = false;
+                    for (let prerequisite of subject.prerequisites) {
+                        if (plannedPlacements[prerequisite]) {
+                            prerequisiteMet = true;
+                            break;
+                        }
+                    }
+                    if (!prerequisiteMet) {
+                        let chosenPrerequisite = subject.prerequisites[0];
+                        let plannedSession = PlanClosestAvailableSession(chosenPrerequisite, allSessions, placeholdersLeft);
+                        plannedPlacements[chosenPrerequisite] = plannedSession;
+                    }
+                }
+                let plannedSessionForSubject = PlanClosestAvailableSession(subject, allSessions, placeholdersLeft, true);
+                plannedPlacements[subject] = plannedSessionForSubject;
+            } else {
+                let plannedSessionForSubject = PlanClosestAvailableSession(subject, allSessions, placeholdersLeft);
+                plannedPlacements[subject] = plannedSessionForSubject;
+            }
+        }
+
+        MoveSubjectsToPlanner(plannedPlacements);
+        return plannedPlacements;
+    }
+
+    function MoveSubjectsToPlanner(plannedPlacements) {
+        for (let subject in plannedPlacements) {
+            let session = plannedPlacements[subject];
+            let targetContainer = document.getElementById('planner-' + session);
+            let subjectElement = document.getElementById(subject);
+        
+            if (subjectElement && targetContainer) {
+                targetContainer.appendChild(subjectElement);
+            }
+        }
+    }
+
     const recommendButton = document.getElementById('recommend-btn');
     if (recommendButton) {
         recommendButton.addEventListener('click', function() {
-            // Temporarily save the original accumulatedCredits
-            let originalAccumulatedCredits = accumulatedCredits;
-            accumulatedCredits = 0;
+            try {
+                // Start of recommendation algorithm
 
-            let dashboardContainer = document.querySelector('.dashboard-container');
-            let startingSession = dashboardContainer.getAttribute('data-starting-session'); // Get the starting session
-            let storedMajor = window.storedMajor || localStorage.getItem('selectedMajor');
-            console.log("Stored Major: ", storedMajor);
+                // Temporarily save the original accumulatedCredits
+                let originalAccumulatedCredits = accumulatedCredits;
+                accumulatedCredits = 0;
 
-            let coreSubjectsOrder;
-            if(storedMajor == "Information Systems Development") {
-                if (startingSession.toLowerCase() === 'autumn') {
-                    coreSubjectsOrder = [
-                        ['CSIT881', 'CSIT883'],
-                        ['CSIT882', 'CSIT884', 'CSIT985', 'ISIT906'],
-                        ['CSIT988', 'ISIT950'],
-                        ['CSCI927']
-                    ];
-                } else {
-                    coreSubjectsOrder = [
-                        ['CSIT881', 'CSIT883', 'CSIT985'],
-                        ['CSIT882', 'CSIT884', 'CSIT988'],
-                        ['ISIT906', 'CSCI927'],
-                        ['ISIT950']
-                    ];
+                let recommendedPlacements = BatchRecommendSubjects(availableSubjects);
+                MoveSubjectsToPlanner(recommendedPlacements);
+
+                // At the end, manually set accumulatedCredits based on the subjects present
+                let finalCredits = 0;
+                document.querySelectorAll('.planner-container .session .subject').forEach(subjectDiv => {
+                    finalCredits += 6;  // Assuming each subject is worth 6 credits
+                });
+
+                // Update accumulatedCredits and the display
+                accumulatedCredits = finalCredits;
+                updateDisplayedCredits();
+
+                // End of recommendation algorithm
+
+            } catch (error) {
+                console.warn("Error in recommendation algorithm:", error);
+
+                // Start of hardcoded recommendation
+
+                let dashboardContainer = document.querySelector('.dashboard-container');
+                let startingSession = dashboardContainer.getAttribute('data-starting-session'); // Get the starting session
+                let storedMajor = window.storedMajor || localStorage.getItem('selectedMajor');
+                console.log("Stored Major: ", storedMajor);
+
+                let coreSubjectsOrder;
+                if(storedMajor == "Information Systems Development") {
+                    if (startingSession.toLowerCase() === 'autumn') {
+                        coreSubjectsOrder = [
+                            ['CSIT881', 'CSIT883'],
+                            ['CSIT882', 'CSIT884', 'CSIT985', 'ISIT906'],
+                            ['CSIT988', 'ISIT950'],
+                            ['CSCI927']
+                        ];
+                    } else {
+                        coreSubjectsOrder = [
+                            ['CSIT881', 'CSIT883', 'CSIT985'],
+                            ['CSIT882', 'CSIT884', 'CSIT988'],
+                            ['ISIT906', 'CSCI927'],
+                            ['ISIT950']
+                        ];
+                    }
                 }
-            }
 
-            let sessionIndex = 0;
-            document.querySelectorAll('.planner-container .session').forEach(sessionDiv => {
-                if (coreSubjectsOrder[sessionIndex]) {
-                    let placeholderIndex = 0;
-                    const placeholders = sessionDiv.querySelectorAll('.placeholder');
-                    coreSubjectsOrder[sessionIndex].forEach(subjectCode => {
-                        const subjectDiv = document.getElementById(subjectCode);
-                        if (subjectDiv && placeholders[placeholderIndex]) {
-                            setupSubjectElement(subjectDiv, sessionIndex);
+                let sessionIndex = 0;
+                document.querySelectorAll('.planner-container .session').forEach(sessionDiv => {
+                    if (coreSubjectsOrder[sessionIndex]) {
+                        let placeholderIndex = 0;
+                        const placeholders = sessionDiv.querySelectorAll('.placeholder');
+                        coreSubjectsOrder[sessionIndex].forEach(subjectCode => {
+                            const subjectDiv = document.getElementById(subjectCode);
+                            if (subjectDiv && placeholders[placeholderIndex]) {
+                                setupSubjectElement(subjectDiv, sessionIndex);
 
-                            // Clear existing content in the placeholder before appending new subject
-                            while (placeholders[placeholderIndex].firstChild) {
-                                placeholders[placeholderIndex].removeChild(placeholders[placeholderIndex].firstChild);
-                            }
-
-                            placeholders[placeholderIndex].appendChild(subjectDiv);
-
-                            if (prerequisitesMet(subjectDiv, sessionIndex)) {
-                                console.log(`Prerequisites met for ${subjectDiv.id}`);
-                                if (!subjectDiv.hasAttribute('data-original-parent')) {
-                                    subjectDiv.setAttribute('data-original-parent', subjectDiv.parentElement.id);
+                                // Clear existing content in the placeholder before appending new subject
+                                while (placeholders[placeholderIndex].firstChild) {
+                                    placeholders[placeholderIndex].removeChild(placeholders[placeholderIndex].firstChild);
                                 }
-                                if (!subjectDiv.querySelector('.reset-btn')) {
-                                    var resetBtn = document.createElement('span');
-                                    resetBtn.innerHTML = " X";
-                                    resetBtn.className = 'reset-btn';
-                                    resetBtn.style.color = "red";
-                                    resetBtn.style.cursor = "pointer";
 
-                                    resetBtn.addEventListener('click', function () {
-                                        revertDrag(subjectDiv);
+                                placeholders[placeholderIndex].appendChild(subjectDiv);
+
+                                if (prerequisitesMet(subjectDiv, sessionIndex)) {
+                                    console.log(`Prerequisites met for ${subjectDiv.id}`);
+                                    if (!subjectDiv.hasAttribute('data-original-parent')) {
+                                        subjectDiv.setAttribute('data-original-parent', subjectDiv.parentElement.id);
+                                    }
+                                    if (!subjectDiv.querySelector('.reset-btn')) {
+                                        var resetBtn = document.createElement('span');
+                                        resetBtn.innerHTML = " X";
+                                        resetBtn.className = 'reset-btn';
+                                        resetBtn.style.color = "red";
+                                        resetBtn.style.cursor = "pointer";
+
+                                        resetBtn.addEventListener('click', function () {
+                                            revertDrag(subjectDiv);
+                                        });
+
+                                        subjectDiv.appendChild(resetBtn);
+                                    }
+                                    placeholderIndex++;
+                                } else {
+                                    console.log(`Prerequisites NOT met for ${subjectDiv.id}`);
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Oops...',
+                                        text: `Prerequisites not met for ${subjectCode}! Make sure you have prerequisites placed in a previous semester`,
                                     });
-
-                                    subjectDiv.appendChild(resetBtn);
                                 }
-                                placeholderIndex++;
-                            } else {
-                                console.log(`Prerequisites NOT met for ${subjectDiv.id}`);
-                                Swal.fire({
-                                    icon: 'warning',
-                                    title: 'Oops...',
-                                    text: `Prerequisites not met for ${subjectCode}! Make sure you have prerequisites placed in a previous semester`,
-                                });
                             }
-                        }
-                    });
-                }
-                sessionIndex++;
-            });
+                        });
+                    }
+                    sessionIndex++;
+                });
+
+            }
+        });
+    }
+});
+
 
             // At the end, manually set accumulatedCredits based on the subjects present
             let finalCredits = 0;
