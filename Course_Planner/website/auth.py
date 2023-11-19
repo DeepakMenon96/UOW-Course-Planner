@@ -183,4 +183,3 @@ def verify_email(token):
     else:
         flash('Invalid verification link', category='error')
         return redirect(url_for('auth.sign_up'))
-
