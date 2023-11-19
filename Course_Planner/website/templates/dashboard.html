@@ -13,10 +13,6 @@
         {% set sessions = ['Spring ' + year|string, 'Autumn ' + (year + 1)|string, 'Spring ' + (year + 1)|string, 'Autumn ' + (year + 2)|string] %}
     {% endif %}
 
-    <button id="recommend-btn">Recommend Subjects</button>
-
-
-
 
     <!-- Container for the Legend -->
     <div class="legend-container">
@@ -37,10 +33,73 @@
         </div>
     </div>
 
-    <!-- Table for selecting capstone/research project -->
+    <button id="recommend-btn">Recommend Subjects</button>
+
+
+
+    <div id="accumulated-credits">Credits: 0</div>
+
+    <div id="currentSelection" style="position: fixed; bottom: 10px; left: 10px; background-color: #f3f4f6; padding: 5px; border-radius: 3px; z-index: 1000; font-size: 0.9em; line-height: 1.2; visibility: hidden;">
+        <strong>Current Selection:</strong>
+        <p style="margin: 2px 0;">Course: {{ current_user.profile.course.name }}</p>
+        <p style="margin: 2px 0;">Major: {{ current_user.profile.major.name }}</p>
+    </div>
+
+
+
+
+    <!-- Profile Settings outside the planner container -->
+<div class="profile-settings" style="display: flex; justify-content: center; gap: 20px; padding: 15px 0; background-color: #b2b9c2; margin-top: 20px; border-radius: 10px;">
+    <form action="{{ url_for('views.update_profile') }}" method="POST" style="display: flex; gap: 20px; align-items: center;">
+
+        <!-- Course Dropdown -->
+        <div class="form-group">
+            <label for="course" style="font-weight: bold;">Course:</label>
+            <select id="course" name="course" class="form-control">
+                {% for course in courses %}
+                    <option value="{{ course.id }}" {% if course.id == current_user.profile.course_id %}selected{% endif %}>{{ course.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Major Dropdown -->
+        <div class="form-group">
+            <label for="major" style="font-weight: bold;">Major:</label>
+            <select id="major" name="major" class="form-control">
+                {% for major in majors %}
+                    <option value="{{ major.id }}" data-course-id="{{ major.course_id }}" {% if major.id == current_user.profile.major_id %}selected{% endif %}>{{ major.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Year Dropdown -->
+        <div class="form-group">
+            <label for="year" style="font-weight: bold;">Year:</label>
+            <select id="year" name="year" class="form-control">
+                {% for year in years %}
+                    <option value="{{ year }}" {% if year == current_user.profile.year %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Session Dropdown -->
+        <div class="form-group">
+            <label for="session" style="font-weight: bold;">Session:</label>
+            <select id="session" name="session" class="form-control">
+                <option value="spring" {% if current_user.profile.session == 'spring' %}selected{% endif %}>Spring</option>
+                <option value="autumn" {% if current_user.profile.session == 'autumn' %}selected{% endif %}>Autumn</option>
+            </select>
+        </div>
+
+        <!-- Regenerate Button -->
+        <button style="margin-top: 14px" type="submit" class="btn btn-primary">Update</button>
+    </form>
+</div>
+
+<!-- Table for selecting capstone/research project -->
     <div class="capstone-selection">
         <h3>Select Capstone/Research Project</h3>
-        <table class="capstone-table">
+        <table class="capstone-table" >
             <thead>
                 <tr>
                     <th>Select</th>
@@ -52,72 +111,13 @@
                 {% for subject in subjects_by_session['capstone'] %}
                 <tr>
                     <td><input type="radio" name="capstone_project" value="{{ subject['code'] }}"></td>
-                    <td>{{ subject['code'] }}</td>
-                    <td>{{ subject['name'] }}</td>
+                    <td style="color: #ffffff;">{{ subject['code'] }}</td>
+                    <td style="color: #ffffff;">{{ subject['name'] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-
-    <div id="accumulated-credits">Credits: 0</div>
-
-    <div id="currentSelection" style="position: fixed; bottom: 10px; left: 10px; background-color: #f3f4f6; padding: 5px; border-radius: 3px; z-index: 1000; font-size: 0.9em; line-height: 1.2;">
-        <strong>Current Selection:</strong>
-        <p style="margin: 2px 0;">Course: {{ current_user.profile.course.name }}</p>
-        <p style="margin: 2px 0;">Major: {{ current_user.profile.major.name }}</p>
-    </div>
-
-
-
-
-    <!-- Profile Settings outside the planner container -->
-<div class="profile-settings" style="display: flex; justify-content: center; gap: 20px; padding: 20px 0; background-color: #f3f4f6;">
-    <form action="{{ url_for('views.update_profile') }}" method="POST" style="display: flex; gap: 20px; align-items: center;">
-
-        <!-- Course Dropdown -->
-        <div class="form-group">
-            <label for="course">Course:</label>
-            <select id="course" name="course" class="form-control">
-                {% for course in courses %}
-                    <option value="{{ course.id }}" {% if course.id == current_user.profile.course_id %}selected{% endif %}>{{ course.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <!-- Major Dropdown -->
-        <div class="form-group">
-            <label for="major">Major:</label>
-            <select id="major" name="major" class="form-control">
-                {% for major in majors %}
-                    <option value="{{ major.id }}" data-course-id="{{ major.course_id }}" {% if major.id == current_user.profile.major_id %}selected{% endif %}>{{ major.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <!-- Year Dropdown -->
-        <div class="form-group">
-            <label for="year">Year:</label>
-            <select id="year" name="year" class="form-control">
-                {% for year in years %}
-                    <option value="{{ year }}" {% if year == current_user.profile.year %}selected{% endif %}>{{ year }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <!-- Session Dropdown -->
-        <div class="form-group">
-            <label for="session">Session:</label>
-            <select id="session" name="session" class="form-control">
-                <option value="spring" {% if current_user.profile.session == 'spring' %}selected{% endif %}>Spring</option>
-                <option value="autumn" {% if current_user.profile.session == 'autumn' %}selected{% endif %}>Autumn</option>
-            </select>
-        </div>
-
-        <!-- Regenerate Button -->
-        <button type="submit" class="btn btn-primary">Regenerate</button>
-    </form>
-</div>
 
     <div class="container-fluid dashboard-container" data-reset-subject-url="{{ url_for('views.reset_subject') }}" data-starting-session="{{ starting_session }}">
     <div class="subjects-container">
@@ -235,13 +235,21 @@
     </div>
 </div>
 
+<button id="save-btn">Save Planner</button>
+
+
 <!-- Linking to External Libraries -->
 <script src="https://unpkg.com/dragula@3.7.2/dist/dragula.min.js"></script>
-<!-- Linking to Your Custom JavaScript File -->
+<!-- Linking to the Custom JavaScript File -->
 <script src="{{ url_for('static', filename='dragdrop.js') }}"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='major.js') }}"></script>
 <script>
   window.storedMajor = "{{ current_user.profile.major.name }}";
+</script>
+<script>
+$(document).ready(function(){
+    $('[data-toggle="popover"]').popover();
+});
 </script>
 {% endblock %}
