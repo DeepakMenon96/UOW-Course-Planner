@@ -1,6 +1,6 @@
 /* Center the form on the page */
 body {
-    background: linear-gradient(-45deg, #d8dde6, #cad0db, #dbf1f9, #10115a);
+    background: linear-gradient(-45deg, #1a2a4f, #0f1940, #05132a, #000b1c);
     background-size: 400% 400%;
     animation: gradient 25s ease infinite;
 }
@@ -20,11 +20,12 @@ body {
 form {
     margin: 0 auto;
     max-width: 400px;
-    background: rgba(255, 255, 255, 0.5); /* Add a white background to the form */
-    padding: 20px; /* Add some padding to the form */
-    border-radius: 10px; /* Add border radius for a rounded appearance */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+    background: #ffffff; /* Fully white background */
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+
 
 /* Style the form header */
 h3 {
@@ -72,4 +73,3 @@ label {
 .container {
     margin-top: 20px;
 }
-
