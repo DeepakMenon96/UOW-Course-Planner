@@ -1,17 +1,40 @@
 body {
-    background-color: #dadbe7;
     margin: 0;
     font-family: 'Arial', sans-serif;
+    position: relative;
+    overflow-y: auto;
+    height: 100vh;
+    background-color: #09114E;  /* This color will be shown if the image doesn't load or before it loads */
 }
 
+body::before {
+    content: "";
+    display: block;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1; /* Place it behind content */
+
+    background-image: url('image.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+
+/* Glassmorphic effect for the main container */
 .dashboard-container {
     width: 98%;
-    margin: 1%;
+    margin: 1% auto;
     display: flex;
     justify-content: space-between;
-    background: #ffffff;
     padding: 20px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .subjects-container,
@@ -19,6 +42,7 @@ body {
     width: 48%;
     box-sizing: border-box;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+
 }
 
 .planner-container {
@@ -33,18 +57,20 @@ body {
     max-height: 85vh;
     padding: 1em;
     margin-bottom: 1em;
+    color: #fff;
 }
 
 .planner-container h2,
 .planner-container .session h3 {
-    font-size: 1em; /* Adjust font size for headings in planner container */
-    margin: 5px 0; /* Adjust margin for headings in planner container */
+    font-size: 1em;
+    margin: 5px 0;
+    color: #fff;
 }
 
 .planner-container .placeholder {
-    min-height: 30px; /* Adjust placeholder size in planner container */
-    margin: 5px 0; /* Adjust margin for placeholder in planner container */
-    padding: 5px; /* Adjust padding for placeholder in planner container */
+    min-height: 30px;
+    margin: 5px 0;
+    padding: 5px;
 }
 
 .subject {
@@ -55,6 +81,7 @@ body {
     margin-bottom: 10px;
     cursor: move;
     transition: all 0.3s ease;
+    color: black;
 }
 
 .subject:hover {
@@ -75,7 +102,7 @@ body {
 }
 
 .dropdown-menu {
-    z-index: 2000 !important; /* any high value should work */
+    z-index: 2000 !important;
 }
 
 .subject .dropdown {
@@ -88,8 +115,8 @@ body {
 }
 
 .custom-small-btn {
-    font-size: 12.5px; /* Adjust as needed */
-    padding: 2px 6px; /* Adjust as needed */
+    font-size: 12.5px;
+    padding: 2px 6px;
 }
 
 /* Subject Blink Styling */
@@ -108,51 +135,51 @@ body {
 }
 
 #accumulated-credits {
-    position: fixed;  /* This will make the div stick to the viewport */
-    bottom: 90px;     /* Push it up 10px from the bottom */
-    left: 10px;       /* Push it 10px from the left */
-    padding: 10px 15px;
-    background-color: #333;  /* Dark background for contrast */
-    color: #fff;      /* White text color */
-    border-radius: 5px;   /* Rounded corners */
+    position: fixed;
+    bottom: 90px;
+    right: 49px;
+    padding: 10px 20px;
+    background-color: #333;
+    color: #fff;
+    border-radius: 10px;
     font-weight: bold;
-    z-index: 1000;    /* Ensure it's above other elements */
+    z-index: 1000;
 }
 
 #accumulated-credits:hover {
-    background-color: #555;  /* Slightly lighter shade on hover */
+    background-color: #555;
 }
 
 /* Styling for Legend Container */
 .legend-container {
-    position: fixed; /* Set position to fixed */
-    top: 110px; /* Adjust the top position as needed */
-    left: 10px;
-    background-color: #fff; /* Background color for the container */
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    background-color: #fff;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 1000; /* Adjust the z-index as needed */
+    z-index: 1000;
 }
 
 
 /* Styling for Legend */
 .legend {
     display: flex;
-    flex-direction: column; /* Display legend items in a column */
+    flex-direction: column;
 }
 
 /* Styling for Legend Items */
 .legend-item {
     display: flex;
     align-items: center;
-    margin-bottom: 10px; /* Add spacing between legend items */
+    margin-bottom: 10px;
 }
 
 /* Styling for Legend Item Colors */
 .legend-color {
-    width: 20px;
+    width: 48px;
     height: 20px;
     margin-right: 5px;
     border-radius: 50%;
@@ -179,6 +206,7 @@ body {
 /* Styles for the capstone selection table */
 .capstone-selection {
     margin-top: 20px;
+   color: #fff;
 }
 
 .capstone-table {
@@ -191,12 +219,65 @@ body {
     border: 1px solid #ccc;
     text-align: left;
     padding: 8px;
+    background-color: #0d0c45;
+
 }
 
 .capstone-table th {
-    background-color: #f2f2f2;
+    background-color: #b2b9c2;
+    color: black;
 }
 
 .capstone-subject {
-    background-color: orange; /* You can choose any shade of orange */
+    background-color: orange;
+}
+
+#recommend-btn {
+    position: fixed;
+    bottom: 150px;
+    left: 20px;
+    padding: 10px 10px;
+    font-size: 0.92em;
+    background: rgba(150, 150, 150, 0.5); /* Semi-transparent light grey */
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Lighter border for the glass effect */
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(1px); /* Frosted appearance */
+    transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+}
+
+#recommend-btn:hover {
+    background: rgba(120, 120, 120, 0.6); /* Slightly darker grey on hover but still semi-transparent */
+    transform: scale(1.05); /* Slight scale up on hover */
+    border: 1px solid rgba(255, 255, 255, 0.5); /* Lighter border on hover */
+}
+
+#save-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 42px;
+    padding: 10px 15px;
+    font-size: 1em;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+
+    /* Bootstrap button hover, active, and focus styles */
+    box-shadow: none;
+}
+
+#save-btn:hover {
+    background-color: #0056b3;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+#save-btn:active,
+#save-btn:focus {
+    background-color: #004085;
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
 }
